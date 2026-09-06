@@ -1,0 +1,6 @@
+{
+  "name": "Pragati (प्रगती)",
+  "description": "Government of Maharashtra market linkages and AI price discovery platform for farmers, buyers, and FPOs.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
