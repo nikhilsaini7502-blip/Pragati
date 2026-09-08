@@ -20,6 +20,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { BuyerMatch } from '../types';
 import { buyerMatches } from '../data/mockData';
+import { PriceForecast } from './PriceForecast';
 
 interface BuyerDashboardProps {
   openVisionModal: () => void;
@@ -248,6 +249,9 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Price Tracker & AI Forecast Section */}
+      <PriceForecast />
 
       {/* 2. AI Matchmaking Section (Verified Farmers) */}
       <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-5">

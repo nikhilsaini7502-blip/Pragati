@@ -79,10 +79,10 @@ export const AgroPriceSuggester: React.FC<AgroPriceSuggesterProps> = ({
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-base sm:text-lg text-slate-900">
                 {language === 'mr'
-                  ? 'एआय बाजारभाव सल्लागार (Price Suggester & Holding Advisor)'
+                  ? 'स्मार्ट दर आणि विक्री सल्लागार'
                   : language === 'hi'
-                  ? 'एआई मूल्य निर्धारक एवं सलाह (Price Suggester & Holding Advisor)'
-                  : 'AI Crop Price Suggester & Holding Horizon'}
+                  ? 'स्मार्ट मंडी भाव और बिक्री सलाहकार'
+                  : 'Smart Price & Sell Advisor'}
               </h3>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold border border-emerald-300">
                 Demand-Supply + Weather Engine
@@ -308,88 +308,6 @@ export const AgroPriceSuggester: React.FC<AgroPriceSuggesterProps> = ({
             <span className="text-[10px] text-slate-500 block mt-1">
               (After storage & shrinkage deduction)
             </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 4 Calculation Factor Vectors Breakdown Matrix */}
-      <div className="space-y-2">
-        <h4 className="font-bold text-xs uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-          <Layers className="w-4 h-4 text-slate-500" />
-          <span>
-            {language === 'mr' ? 'दर निश्चितीमागील ४ प्रमुख घटकांचे विश्लेषण (Factor Matrix):' : language === 'hi' ? 'मूल्य निर्धारण के 4 प्रमुख घटकों का विश्लेषण (Factor Matrix):' : 'Predictive Econometric & Weather Factor Breakdown:'}
-          </span>
-        </h4>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* Factor 1: Past Demand & Supply Data */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <BarChart3 className="w-4 h-4 text-blue-600" />
-                <span>१. मागील पुरवठा व आवक ट्रेंड (Past Supply)</span>
-              </span>
-              <span className="text-xs font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                {result.factors.pastSupply.delta >= 0 ? `+₹${result.factors.pastSupply.delta}` : `-₹${Math.abs(result.factors.pastSupply.delta)}`}
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {result.factors.pastSupply.text}
-            </p>
-          </div>
-
-          {/* Factor 2: Future Demand & Institutional Tenders */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4 text-emerald-600" />
-                <span>२. भावी मागणी व खरेदी निविदा (Future Demand)</span>
-              </span>
-              <span className="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                +{result.factors.futureDemand.delta}
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {result.factors.futureDemand.text}
-            </p>
-          </div>
-
-          {/* Factor 3: Weather & Rainfall Telemetry */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <CloudRain className="w-4 h-4 text-amber-600" />
-                <span>३. हवामान व पाऊस परिणाम (Weather Data)</span>
-              </span>
-              <span
-                className={`text-xs font-extrabold px-2 py-0.5 rounded-full border ${
-                  result.factors.weatherImpact.delta >= 0
-                    ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                    : 'text-rose-700 bg-rose-50 border-rose-200'
-                }`}
-              >
-                {result.factors.weatherImpact.delta >= 0 ? `+₹${result.factors.weatherImpact.delta}` : `-₹${Math.abs(result.factors.weatherImpact.delta)}`}
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {result.factors.weatherImpact.text}
-            </p>
-          </div>
-
-          {/* Factor 4: Storage Infrastructure & Shrinkage */}
-          <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                <Warehouse className="w-4 h-4 text-purple-600" />
-                <span>४. साठवणूक घट व जोखीम (Storage Factor)</span>
-              </span>
-              <span className="text-xs font-extrabold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
-                {result.factors.storageRisk.delta}
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              {result.factors.storageRisk.text}
-            </p>
           </div>
         </div>
       </div>

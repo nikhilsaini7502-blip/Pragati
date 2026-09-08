@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LanguageProvider } from './context/LanguageContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
@@ -27,6 +27,11 @@ export default function App() {
   const [isGrievanceModalOpen, setIsGrievanceModalOpen] = useState(false);
   const [isGeminiModalOpen, setIsGeminiModalOpen] = useState(false);
   const [geminiQuery, setGeminiQuery] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentRole]);
+
 
   const handleOpenGeminiModal = (query?: string) => {
     setGeminiQuery(query);

@@ -15,7 +15,8 @@ import {
   Thermometer,
   ShieldAlert,
   Info,
-  ChevronDown
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -292,6 +293,7 @@ interface WeatherWidgetProps {
 export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ onAskGeminiAdvisor }) => {
   const { language } = useLanguage();
   const [selectedDistrict, setSelectedDistrict] = useState<string>('Nashik');
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<string>('Just now (11:45 AM)');
 
@@ -320,7 +322,10 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ onAskGeminiAdvisor
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
       {/* Top Header Bar: District Selector & Live Agro-Meteorology Banner */}
-      <div className="bg-slate-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div 
+        className="bg-slate-900 text-white p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-blue-400 shrink-0">
             <CloudRain className="w-6 h-6" />
@@ -355,6 +360,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ onAskGeminiAdvisor
             <select
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
               className="appearance-none bg-slate-800 text-white text-xs font-semibold pl-3 pr-8 py-2 rounded-xl border border-slate-700 hover:border-slate-600 focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
             >
               {Object.keys(DISTRICT_WEATHER).map((dist) => (
@@ -371,16 +377,22 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ onAskGeminiAdvisor
           </div>
 
           <button
-            onClick={handleRefresh}
+            onClick={(e) => { e.stopPropagation(); handleRefresh(); }}
             title="Refresh Live Weather"
             className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-green-400' : ''}`} />
           </button>
+          <button 
+            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer ml-1"
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </div>
       </div>
 
-      <div className="p-4 sm:p-5 pt-0 space-y-4">
+      {isExpanded && (
+      <div className="p-4 sm:p-5 pt-0 space-y-4 mt-4">
         {/* Real-Time Metrics Cards (Temperature, Rain Probability, Humidity, Wind) */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* 1. Temperature */}
@@ -655,6 +667,7 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({ onAskGeminiAdvisor
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };
