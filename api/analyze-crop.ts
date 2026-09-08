@@ -29,7 +29,7 @@ Determine the precise crop name, grade, score (0-100), if it's spoiled/rotten, a
 Be brutally honest about quality.`;
 
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: [
             {
               role: "user",

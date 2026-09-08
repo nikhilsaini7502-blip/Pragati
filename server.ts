@@ -105,7 +105,7 @@ Return ONLY a JSON object matching this schema:
 }`;
 
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3.6-flash",
           contents: [
             {
               role: "user",
@@ -261,7 +261,7 @@ Return ONLY a JSON object matching this exact schema:
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       contents: [
         {
           role: "user",
@@ -331,7 +331,7 @@ app.post("/api/gemini/advisor", async (req, res) => {
         'Respond in English.';
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.6-flash",
         contents: `You are Pragati's Official AI Assistant (by Government of Maharashtra).
 Your role is to help users navigate the website, resolve queries for Farmers, Buyers, and FPOs, and provide APMC market advisory.
 
