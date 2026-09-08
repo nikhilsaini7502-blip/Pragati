@@ -99,7 +99,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <h1 className="text-5xl sm:text-7xl md:text-8xl font-serif font-black tracking-tight leading-none text-white drop-shadow-2xl">
               PRAGATI
             </h1>
-            <p className="mt-4 text-lg sm:text-xl md:text-2xl font-serif font-semibold italic text-amber-100 uppercase tracking-[0.2em] drop-shadow-lg">
+            <p className="mt-4 text-lg sm:text-xl md:text-2xl font-[Georgia] font-semibold not-italic text-amber-100 uppercase tracking-[0.2em] drop-shadow-lg">
               {language === 'mr' ? 'महाराष्ट्र शासन' : language === 'hi' ? 'महाराष्ट्र सरकार' : 'By Govt of Maharashtra'}
             </p>
           </div>
