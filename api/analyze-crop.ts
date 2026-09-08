@@ -24,9 +24,9 @@ export default async function handler(req: any, res: any) {
       try {
         const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
         const prompt = `You are a strict, highly accurate Agricultural Produce Grader and Computer Vision Assayer.
-Analyze this crop image and the user's hint: "${cropHint}".
-Determine the precise crop name, grade, score (0-100), if it's spoiled/rotten, and exact metrics.
-Be brutally honest about quality.`;
+Analyze this image and the user's hint: "${cropHint}".
+FIRST, check if the image actually contains an agricultural crop, produce, or plant. If it DOES NOT (e.g., it is a person, hand, pen, phone, room, screenshot, etc.), set isCropDetected to false and fill the rest with empty strings/0.
+If it IS a crop, set isCropDetected to true, determine the precise crop name, grade, score (0-100), if it's spoiled/rotten, and exact metrics. Be brutally honest about quality.`;
 
         const response = await ai.models.generateContent({
           model: "gemini-3.6-flash",
@@ -44,6 +44,7 @@ Be brutally honest about quality.`;
             responseSchema: {
               type: Type.OBJECT,
               properties: {
+                isCropDetected: { type: Type.BOOLEAN },
                 cropName: { type: Type.STRING },
                 grade: { type: Type.STRING },
                 score: { type: Type.INTEGER },
@@ -57,7 +58,7 @@ Be brutally honest about quality.`;
                 recommendation: { type: Type.STRING },
               },
               required: [
-                "cropName", "grade", "score", "isSpoiledOrRotten", 
+                "isCropDetected", "cropName", "grade", "score", "isSpoiledOrRotten", 
                 "moisture", "uniformity", "defects", "shelfLife", 
                 "mspBonus", "findings", "recommendation"
               ],
@@ -90,6 +91,7 @@ Be brutally honest about quality.`;
 
     const fallbackResult = isRottenHint
       ? {
+          isCropDetected: true,
           cropName: "Nashik Red Onion (Discolored / Rotting Sample)",
           grade: "Grade C (Sub-standard)",
           score: 32,
@@ -103,6 +105,7 @@ Be brutally honest about quality.`;
           recommendation: "Separate immediately from healthy stock.",
         }
       : {
+          isCropDetected: true,
           cropName: "Nashik Red Onion (Garva Variety)",
           grade: "Grade A+",
           score: 95,

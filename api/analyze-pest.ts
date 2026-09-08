@@ -31,11 +31,13 @@ export default async function handler(req: any, res: any) {
       'Respond in English.';
 
     const prompt = `You are an expert Agronomist and Plant Pathologist.
-Analyze the provided crop image and the farmer's summary: "${summary}"
-Identify any pests, diseases, or deficiencies.
+Analyze the provided image and the farmer's summary: "${summary}".
+FIRST, check if the image actually contains an agricultural crop, plant, or leaf. If it DOES NOT (e.g., it is a person, hand, pen, phone, screenshot, etc.), set isCropDetected to false and fill the rest with empty strings.
+If it IS a crop, set isCropDetected to true and identify any pests, diseases, or deficiencies.
 ${langInstruction}
 Return ONLY a JSON object matching this exact schema:
 {
+  "isCropDetected": true or false,
   "diseaseName": "Common Name of the Pest/Disease",
   "confidence": "High | Medium | Low",
   "severity": "Mild | Moderate | Severe",
@@ -60,6 +62,7 @@ Return ONLY a JSON object matching this exact schema:
         responseSchema: {
           type: Type.OBJECT,
           properties: {
+            isCropDetected: { type: Type.BOOLEAN },
             diseaseName: { type: Type.STRING },
             confidence: { type: Type.STRING },
             severity: { type: Type.STRING },
@@ -68,7 +71,7 @@ Return ONLY a JSON object matching this exact schema:
             chemicalCure: { type: Type.STRING },
           },
           required: [
-            "diseaseName", "confidence", "severity", 
+            "isCropDetected", "diseaseName", "confidence", "severity", 
             "identificationDetails", "homeRemedy", "chemicalCure"
           ],
         },
@@ -90,6 +93,7 @@ Return ONLY a JSON object matching this exact schema:
     const isWilt = summaryLower.includes("wilt") || summaryLower.includes("dry") || summaryLower.includes("yellow");
     
     const fallbackResult = isWilt ? {
+      isCropDetected: true,
       diseaseName: "Fusarium Wilt / Root Rot",
       confidence: "High",
       severity: "Severe",
@@ -97,6 +101,7 @@ Return ONLY a JSON object matching this exact schema:
       homeRemedy: "Apply Neem oil extract or Trichoderma viride bio-fungicide to the soil.",
       chemicalCure: "Drench roots with Carbendazim (Bavistin) 2g/liter of water. Avoid overwatering."
     } : {
+      isCropDetected: true,
       diseaseName: "Aphids / Thrips Infestation",
       confidence: "Medium",
       severity: "Moderate",

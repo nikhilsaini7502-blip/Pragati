@@ -7,7 +7,7 @@ interface PestDetectorModalProps {
   onClose: () => void;
 }
 
-interface PestAnalysisResult {
+interface PestAnalysisResult {  isCropDetected?: boolean;
   diseaseName: string;
   confidence: string;
   severity: string;

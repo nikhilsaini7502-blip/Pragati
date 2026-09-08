@@ -1,4 +1,4 @@
-export interface CropAssayerResult {
+export interface CropAssayerResult {  isCropDetected?: boolean;
   cropName: string;
   grade: string;
   score: number;
@@ -163,6 +163,7 @@ function getRuleBasedResult(
     const defects = (48 + Math.random() * 22).toFixed(1); // 48% to 70%
 
     return {
+      isCropDetected: true,
       cropName: `${displayName} (Rotten / Spoiled Sample)`,
       grade: 'Grade C (Sub-standard / Rejected)',
       score,

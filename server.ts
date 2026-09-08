@@ -127,6 +127,7 @@ Return ONLY a JSON object matching this schema:
             responseSchema: {
               type: Type.OBJECT,
               properties: {
+                isCropDetected: { type: Type.BOOLEAN },
                 cropName: { type: Type.STRING },
                 grade: { type: Type.STRING },
                 score: { type: Type.NUMBER },
@@ -140,6 +141,7 @@ Return ONLY a JSON object matching this schema:
                 recommendation: { type: Type.STRING },
               },
               required: [
+                "isCropDetected",
                 "cropName",
                 "grade",
                 "score",
@@ -182,6 +184,7 @@ Return ONLY a JSON object matching this schema:
 
     const fallbackResult = isRottenHint
       ? {
+          isCropDetected: true,
           cropName: "Nashik Red Onion (Discolored / Rotting Sample)",
           grade: "Grade C (Sub-standard)",
           score: 32,
@@ -197,6 +200,7 @@ Return ONLY a JSON object matching this schema:
             "Separate immediately from healthy stock to prevent contamination of the entire lot. Not eligible for premium APMC escrow listing.",
         }
       : {
+          isCropDetected: true,
           cropName: "Nashik Red Onion (Garva Variety)",
           grade: "Grade A+",
           score: 95,
@@ -244,13 +248,14 @@ app.post("/api/analyze-pest", async (req, res) => {
 
     const prompt = `
 You are an expert Agronomist and Plant Pathologist.
-Analyze the provided crop image and the farmer's summary: "${summary}"
-
-Identify any pests, diseases, or deficiencies.
+Analyze the provided image and the farmer's summary: "${summary}".
+FIRST, check if the image actually contains an agricultural crop, plant, or leaf. If it DOES NOT (e.g., it is a person, hand, pen, phone, screenshot, etc.), set isCropDetected to false and fill the rest with empty strings.
+If it IS a crop, set isCropDetected to true and identify any pests, diseases, or deficiencies.
 ${langInstruction}
 
 Return ONLY a JSON object matching this exact schema:
 {
+  "isCropDetected": true,
   "diseaseName": "Common Name of the Pest/Disease",
   "confidence": "High | Medium | Low",
   "severity": "Mild | Moderate | Severe",
@@ -283,6 +288,7 @@ Return ONLY a JSON object matching this exact schema:
         responseSchema: {
           type: Type.OBJECT,
           properties: {
+            isCropDetected: { type: Type.BOOLEAN },
             diseaseName: { type: Type.STRING },
             confidence: { type: Type.STRING },
             severity: { type: Type.STRING },
@@ -291,6 +297,7 @@ Return ONLY a JSON object matching this exact schema:
             chemicalCure: { type: Type.STRING },
           },
           required: [
+            "isCropDetected",
             "diseaseName",
             "confidence",
             "severity",
@@ -320,6 +327,7 @@ Return ONLY a JSON object matching this exact schema:
     const isWilt = summaryLower.includes("wilt") || summaryLower.includes("dry") || summaryLower.includes("yellow");
     
     const fallbackResult = isWilt ? {
+      isCropDetected: true,
       diseaseName: "Fusarium Wilt / Root Rot",
       confidence: "High",
       severity: "Severe",
@@ -327,6 +335,7 @@ Return ONLY a JSON object matching this exact schema:
       homeRemedy: "Apply Neem oil extract or Trichoderma viride bio-fungicide to the soil.",
       chemicalCure: "Drench roots with Carbendazim (Bavistin) 2g/liter of water. Avoid overwatering."
     } : {
+      isCropDetected: true,
       diseaseName: "Aphids / Thrips Infestation",
       confidence: "Medium",
       severity: "Moderate",
