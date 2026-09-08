@@ -6,14 +6,12 @@ interface FooterProps {
   openGrievanceModal: () => void;
   openLogisticsModal: () => void;
   openVisionModal: () => void;
-  openShareModal?: () => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   openGrievanceModal,
   openLogisticsModal,
   openVisionModal,
-  openShareModal,
 }) => {
   const { t, language } = useLanguage();
 
@@ -124,17 +122,6 @@ export const Footer: React.FC<FooterProps> = ({
                   305+ Maharashtra APMC Live Feeds
                 </span>
               </li>
-              {openShareModal && (
-                <li>
-                  <button
-                    onClick={openShareModal}
-                    className="hover:text-green-400 text-left transition-colors flex items-center gap-1.5 cursor-pointer text-green-400 font-semibold"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    {language === 'mr' ? 'मित्रांना ॲप शेअर करा' : language === 'hi' ? 'मित्रों को ऐप शेयर करें' : 'Share Pragati with Friends'}
-                  </button>
-                </li>
-              )}
             </ul>
           </div>
 

@@ -20,7 +20,7 @@ import { analyzeCropImage, CropAssayerResult } from '../utils/cropVisionAnalyzer
 interface AiVisionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLotCreated?: (cropName: string, grade: string, score: number, quantity: number, price: number) => void;
+  onLotCreated?: (cropName: string, grade: string, score: number, quantity: number, price: number, imageGallery?: string[]) => void;
 }
 
 interface PresetSample {
@@ -64,19 +64,19 @@ const presetSamples: PresetSample[] = [
 
 export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, onLotCreated }) => {
   const { language } = useLanguage();
-  const [selectedPreset, setSelectedPreset] = useState<PresetSample>(presetSamples[0]);
-  const [activeImage, setActiveImage] = useState<string>(presetSamples[0].image);
-  const [activeImageHint, setActiveImageHint] = useState<string>(presetSamples[0].hint);
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+  const [activeImageHint, setActiveImageHint] = useState<string>('');
   const [isScanning, setIsScanning] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<CropAssayerResult | null>(null);
-  const [quantity, setQuantity] = useState('65');
-  const [expectedPrice, setExpectedPrice] = useState('2400');
-  const [isCustomUpload, setIsCustomUpload] = useState(false);
+  const [quantity, setQuantity] = useState('');
+  const [expectedPrice, setExpectedPrice] = useState('');
 
-  // Run initial analysis on modal open
+  // Clear state when modal opens
   useEffect(() => {
     if (isOpen) {
-      runInspection(presetSamples[0].image, presetSamples[0].hint);
+      setActiveImage(null);
+      setAnalysisResult(null);
+      setActiveImageHint('');
     }
   }, [isOpen]);
 
@@ -105,14 +105,6 @@ export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, o
     }
   }
 
-  const handleSelectPreset = (preset: PresetSample) => {
-    setSelectedPreset(preset);
-    setActiveImage(preset.image);
-    setActiveImageHint(preset.hint);
-    setIsCustomUpload(false);
-    runInspection(preset.image, preset.hint);
-  };
-
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -120,9 +112,8 @@ export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, o
       reader.onload = (event) => {
         const url = event.target?.result as string;
         setActiveImage(url);
-        setActiveImageHint(file.name);
-        setIsCustomUpload(true);
-        runInspection(url, file.name);
+        // Do not overwrite the manually entered crop name (activeImageHint)
+        runInspection(url, activeImageHint);
       };
       reader.readAsDataURL(file);
     }
@@ -169,103 +160,89 @@ export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, o
         {/* Content */}
         <div className="p-5 sm:p-6 space-y-5 max-h-[78vh] overflow-y-auto">
           
-          {/* Preset Selector with clear Rotten vs Top Class toggle */}
+          {/* Crop Name Input */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-semibold text-slate-800">
                 {language === 'mr'
-                  ? 'चाचणी नमुना निवडा किंवा स्वतःचा फोटो अपलोड करा:'
+                  ? 'शेतमालाचे पूर्ण नाव टाका:'
                   : language === 'hi'
-                  ? 'परीक्षण नमूना चुनें या अपना फोटो अपलोड करें:'
-                  : 'Select Test Sample or Upload Photo to Grade:'}
+                  ? 'फसल का पूरा नाम दर्ज करें:'
+                  : 'Enter Crop Full Name (e.g., Nashik Onions, Soybean, Wheat):'}
               </label>
-              <span className="text-[11px] text-slate-500 font-medium">
-                {language === 'mr' ? 'खराब व चांगल्या दोन्ही मालाची अचूक चाचणी' : 'Accurately detects rotten vs top-class produce'}
-              </span>
             </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {presetSamples.map((preset) => {
-                const isSelected = !isCustomUpload && selectedPreset.id === preset.id;
-                return (
-                  <button
-                    key={preset.id}
-                    onClick={() => handleSelectPreset(preset)}
-                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                      isSelected
-                        ? preset.category === 'rotten'
-                          ? 'border-red-500 bg-red-50 ring-2 ring-red-500/20 font-bold'
-                          : 'border-emerald-600 bg-emerald-50 ring-2 ring-emerald-600/20 font-bold'
-                        : 'border-slate-200 hover:border-slate-300 bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-slate-900 truncate">
-                        {preset.category === 'rotten' ? '⚠️ Rotten Onion' : preset.name.split(' ')[0]}
-                      </p>
-                    </div>
-                    <p
-                      className={`text-[10px] mt-0.5 font-semibold ${
-                        preset.category === 'rotten' ? 'text-red-700' : 'text-emerald-700'
-                      }`}
-                    >
-                      {preset.category === 'rotten' ? 'Spoiled / Decay' : 'Top Export'}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
+            <input
+              type="text"
+              value={activeImageHint}
+              onChange={(e) => setActiveImageHint(e.target.value)}
+              placeholder={language === 'mr' ? 'उदा. नाशिक लाल कांदा' : 'e.g., Nashik Red Onion'}
+              className="w-full p-3 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
           </div>
 
           {/* Image Viewport with Scanning Overlay */}
-          <div className="relative rounded-2xl overflow-hidden border-2 border-slate-300 bg-black aspect-video max-h-56 flex items-center justify-center shadow-xs">
-            <img
-              src={activeImage}
-              alt="Crop sample under inspection"
-              className="w-full h-full object-cover"
+          <div className="relative rounded-2xl overflow-hidden border-2 border-slate-300 bg-slate-50 aspect-video max-h-56 flex flex-col items-center justify-center shadow-xs group hover:border-emerald-400 transition-colors">
+            {activeImage ? (
+              <>
+                <img
+                  src={activeImage}
+                  alt="Crop sample under inspection"
+                  className="w-full h-full object-cover"
+                />
+                {/* Scanning Laser Animation */}
+                {isScanning && (
+                  <div className="absolute inset-0 bg-emerald-500/10 flex flex-col justify-between pointer-events-none">
+                    <div className="w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse shadow-lg shadow-emerald-400" />
+                    <div className="p-3 bg-slate-950/80 backdrop-blur-md text-emerald-300 text-xs font-mono flex items-center gap-2 mx-auto mb-4 rounded-full border border-emerald-500/40 shadow-lg">
+                      <RefreshCw className="w-4 h-4 animate-spin text-emerald-400" />
+                      <span>Gemini Vision Assessing: Black Mold, Soft Rot, Moisture, Uniformity...</span>
+                    </div>
+                  </div>
+                )}
+                {/* Verification Status Tag */}
+                <div className="absolute top-3 left-3 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700 text-white text-[11px] flex items-center gap-1.5 shadow-md">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      isScanning ? 'bg-amber-400 animate-ping' : isRotten ? 'bg-red-500' : 'bg-emerald-400'
+                    }`}
+                  />
+                  <span className="font-mono">
+                    {isScanning
+                      ? 'Gemini Scanning...'
+                      : isRotten
+                      ? 'Spoilage Detected'
+                      : 'AI Certified'}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="flex flex-col items-center text-slate-400 p-6 text-center gap-2">
+                <Camera className="w-12 h-12 mb-2 opacity-50 group-hover:text-emerald-500 transition-colors" />
+                <p className="text-sm font-bold text-slate-600">
+                  {language === 'mr' ? 'फोटो अपलोड करण्यासाठी टॅप करा' : language === 'hi' ? 'फोटो अपलोड करने के लिए टैप करें' : 'Tap to upload a crop photo'}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {language === 'mr' ? 'AI विश्लेषणासाठी स्पष्ट फोटो आवश्यक' : language === 'hi' ? 'AI विश्लेषण के लिए स्पष्ट फोटो आवश्यक' : 'Clear photos give the best AI analysis'}
+                </p>
+              </div>
+            )}
+            
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+              onChange={handleFileUpload}
             />
 
-            {/* Scanning Laser Animation */}
-            {isScanning && (
-              <div className="absolute inset-0 bg-emerald-500/10 flex flex-col justify-between pointer-events-none">
-                <div className="w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent animate-pulse shadow-lg shadow-emerald-400" />
-                <div className="p-3 bg-slate-950/80 backdrop-blur-md text-emerald-300 text-xs font-mono flex items-center gap-2 mx-auto mb-4 rounded-full border border-emerald-500/40 shadow-lg">
-                  <RefreshCw className="w-4 h-4 animate-spin text-emerald-400" />
-                  <span>Gemini Vision Assessing: Black Mold, Soft Rot, Moisture, Uniformity...</span>
+            {activeImage && (
+              <div className="absolute bottom-3 right-3 flex items-center gap-2 z-10 pointer-events-none">
+                <div className="px-3 py-1.5 rounded-xl bg-slate-900/90 text-white text-xs font-medium backdrop-blur-md border border-slate-700 flex items-center gap-1.5 shadow-md">
+                  <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{language === 'mr' ? 'फोटो बदला' : language === 'hi' ? 'फोटो बदलें' : 'Change Photo'}</span>
                 </div>
               </div>
             )}
-
-            {/* Verification Status Tag */}
-            <div className="absolute top-3 left-3 bg-slate-950/85 backdrop-blur-md px-2.5 py-1 rounded-full border border-slate-700 text-white text-[11px] flex items-center gap-1.5 shadow-md">
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isScanning ? 'bg-amber-400 animate-ping' : isRotten ? 'bg-red-500' : 'bg-emerald-400'
-                }`}
-              />
-              <span className="font-mono">
-                {isScanning
-                  ? 'Gemini Scanning...'
-                  : isRotten
-                  ? 'Spoilage Detected'
-                  : 'AI Certified'}
-              </span>
-            </div>
-
-            {/* Upload Button overlay */}
-            <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              <label className="cursor-pointer px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-900 text-white text-xs font-medium backdrop-blur-md border border-slate-700 flex items-center gap-1.5 shadow-md transition-all active:scale-95">
-                <Camera className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{language === 'mr' ? 'कॅमेरा / फोटो अपलोड करा' : language === 'hi' ? 'कैमरा / फोटो अपलोड करें' : 'Upload Produce Photo'}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
-              </label>
-            </div>
           </div>
 
           {/* AI Inspection Results Card - DYNAMICALLY STYLED FOR ROTTEN VS TOP CLASS */}
@@ -393,6 +370,8 @@ export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, o
             </div>
           )}
 
+          {analysisResult && !isScanning && (
+          <>
           {/* Quick Lot Register Form within Modal */}
           <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
             <h4 className="text-xs font-bold text-slate-800">
@@ -425,19 +404,22 @@ export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, o
               </div>
             </div>
           </div>
-
-        </div>
-
+          </>
+        )}
         {/* Footer actions */}
         <div className="bg-slate-50 px-5 py-3.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <button
-            onClick={() => runInspection(activeImage, activeImageHint)}
-            disabled={isScanning}
-            className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{language === 'mr' ? 'पुन्हा स्कॅन करा' : language === 'hi' ? 'पुनः स्कैन करें' : 'Rescan Image'}</span>
-          </button>
+                    {activeImage ? (
+            <button
+              onClick={() => runInspection(activeImage, activeImageHint)}
+              disabled={isScanning}
+              className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
+              <span>{language === 'mr' ? 'पुन्हा स्कॅन करा' : language === 'hi' ? 'पुनः स्कैन करें' : 'Rescan Image'}</span>
+            </button>
+          ) : (
+            <div></div>
+          )}
 
           <div className="flex items-center gap-2">
             <button
@@ -454,7 +436,8 @@ export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, o
                     analysisResult.grade,
                     analysisResult.score,
                     Number(quantity) || 60,
-                    Number(expectedPrice) || 2400
+                    Number(expectedPrice) || 2400,
+                    [activeImage]
                   );
                 }
                 onClose();
@@ -477,6 +460,7 @@ export const AiVisionModal: React.FC<AiVisionModalProps> = ({ isOpen, onClose, o
         </div>
 
       </div>
+    </div>
     </div>
   );
 };

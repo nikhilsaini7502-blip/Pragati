@@ -339,10 +339,24 @@ export const BuyerDashboard: React.FC<BuyerDashboardProps> = ({
                       </div>
                     </div>
                   </div>
-
-                  <span className="text-[10px] font-mono text-slate-400">
-                    ID: {farmer.farmerId}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-[10px] font-mono text-slate-400">
+                      ID: {farmer.farmerId}
+                    </span>
+                    {/* Crop Images Gallery (Optional) */}
+                    {farmer.imageGallery && farmer.imageGallery.length > 0 && (
+                      <div className="flex -space-x-2 overflow-hidden mt-1">
+                        {farmer.imageGallery.map((img, idx) => (
+                          <img 
+                            key={idx}
+                            src={img} 
+                            alt="Crop sample" 
+                            className="inline-block h-6 w-6 rounded-md ring-1 ring-white object-cover shadow-xs border border-slate-200"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Crop & Quality Score info */}

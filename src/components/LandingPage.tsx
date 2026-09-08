@@ -31,7 +31,6 @@ interface LandingPageProps {
   openVisionModal: () => void;
   openLogisticsModal: () => void;
   openGeminiModal: (initialQuery?: string) => void;
-  openShareModal?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -39,7 +38,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   openVisionModal,
   openLogisticsModal,
   openGeminiModal,
-  openShareModal,
 }) => {
   const { t, language } = useLanguage();
   const [searchInput, setSearchInput] = useState('');
@@ -565,36 +563,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
 
-        {/* Share Pragati with Friends & Fellow Farmers CTA */}
-        {openShareModal && (
-          <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
-            <div className="flex items-center gap-3 text-center sm:text-left">
-              <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-green-400 shrink-0">
-                <Share2 className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-white">
-                  {language === 'mr' ? 'शेतकरी मित्रांसोबत प्रगती ॲप लिंक शेअर करा' : language === 'hi' ? 'किसान मित्रों के साथ प्रगति ऐप लिंक साझा करें' : 'Share Pragati App Link with Friends & Farmers'}
-                </h4>
-                <p className="text-xs text-slate-300">
-                  {language === 'mr'
-                    ? 'गावातील इतर शेतकऱ्यांना थेट बाजारभाव आणि हवामान अलर्ट मिळवण्यासाठी लिंक पाठवा'
-                    : language === 'hi'
-                    ? 'गांव के अन्य किसानों को सीधे मंडी भाव व मौसम अलर्ट पाने के लिए लिंक भेजें'
-                    : 'Help fellow farmers access real-time mandi prices, weather alerts, and AI grading'}
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={openShareModal}
-              className="px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-transform active:scale-95 cursor-pointer shrink-0"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>{language === 'mr' ? 'लिंक शेअर करा' : language === 'hi' ? 'लिंक शेयर करें' : 'Generate Shareable Link'}</span>
-            </button>
-          </div>
-        )}
       </section>
     </div>
   );

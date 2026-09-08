@@ -7,10 +7,9 @@ interface NavbarProps {
   currentRole: UserRole;
   setCurrentRole: (role: UserRole) => void;
   openGrievanceModal: () => void;
-  openShareModal?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentRole, setCurrentRole, openGrievanceModal, openShareModal }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentRole, setCurrentRole, openGrievanceModal }) => {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -168,19 +167,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRole, setCurrentRole, ope
           </button>
         </nav>
 
-        {/* Right Action: Share Link & Help & Complaints */}
+        {/* Right Action: Help & Complaints */}
         <div className="flex items-center gap-2">
-          {openShareModal && (
-            <button
-              onClick={openShareModal}
-              className="px-2.5 sm:px-3 py-1.5 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-              title="Share app with friends & farmers"
-            >
-              <Share2 className="w-3.5 h-3.5 text-green-600" />
-              <span className="hidden sm:inline">{language === 'mr' ? 'शेअर करा' : language === 'hi' ? 'शेयर करें' : 'Share'}</span>
-            </button>
-          )}
-
           <button
             onClick={openGrievanceModal}
             className="px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
@@ -254,21 +242,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRole, setCurrentRole, ope
               <span className="text-[10px] text-slate-500 font-normal">Mandi Overseer & Grievances</span>
             </button>
           </div>
-
-          {openShareModal && (
-            <div className="pt-2">
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openShareModal();
-                }}
-                className="w-full py-2 px-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <Share2 className="w-4 h-4 text-green-600" />
-                <span>{language === 'mr' ? 'मित्रांना ॲप लिंक पाठवा (Share Link)' : language === 'hi' ? 'मित्रों को ऐप लिंक साझा करें (Share Link)' : 'Share Pragati App with Friends'}</span>
-              </button>
-            </div>
-          )}
 
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
             <span>{language === 'mr' ? 'महाराष्ट्र शासन कृषी हेल्पलाईन:' : language === 'hi' ? 'महाराष्ट्र शासन कृषि हेल्पलाइन:' : 'Govt. of Maharashtra Agri Helpline:'}</span>

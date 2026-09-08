@@ -107,6 +107,7 @@ export const initialFarmerLots: FarmerLot[] = [
     harvestDate: '3 days ago',
     aiQualityGrade: 'A+',
     aiQualityScore: 94,
+    imageGallery: ['https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600&auto=format&fit=crop&q=80'],
     aiQualityMetrics: {
       sizeUniformity: 92,
       moistureContent: 11.4,

@@ -8,10 +8,11 @@ import { BuyerDashboard } from './components/BuyerDashboard';
 import { FpoDashboard } from './components/FpoDashboard';
 import { AdminPortal } from './components/AdminPortal';
 import { AiVisionModal } from './components/AiVisionModal';
+import { PestDetectorModal } from './components/PestDetectorModal';
 import { LogisticsTrackerModal } from './components/LogisticsTrackerModal';
 import { GrievanceModal } from './components/GrievanceModal';
 import { FloatingChatbot } from './components/FloatingChatbot';
-import { ShareModal } from './components/ShareModal';
+
 import { UserRole, FarmerLot } from './types';
 import { initialFarmerLots } from './data/mockData';
 
@@ -21,10 +22,10 @@ export default function App() {
 
   // Modal states
   const [isVisionModalOpen, setIsVisionModalOpen] = useState(false);
+  const [isPestModalOpen, setIsPestModalOpen] = useState(false);
   const [isLogisticsModalOpen, setIsLogisticsModalOpen] = useState(false);
   const [isGrievanceModalOpen, setIsGrievanceModalOpen] = useState(false);
   const [isGeminiModalOpen, setIsGeminiModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [geminiQuery, setGeminiQuery] = useState<string | undefined>(undefined);
 
   const handleOpenGeminiModal = (query?: string) => {
@@ -37,7 +38,8 @@ export default function App() {
     grade: string,
     score: number,
     quantity: number,
-    price: number
+    price: number,
+    imageGallery?: string[]
   ) => {
     const newLot: FarmerLot = {
       id: `LOT-MH-${Math.floor(400 + Math.random() * 200)}`,
@@ -52,6 +54,7 @@ export default function App() {
       harvestDate: 'Today',
       aiQualityGrade: (grade.includes('A+') ? 'A+' : grade.includes('A') ? 'A' : 'B') as any,
       aiQualityScore: score,
+      imageGallery: imageGallery,
       aiQualityMetrics: {
         sizeUniformity: score > 90 ? 94 : 88,
         moistureContent: 10.5,
@@ -75,7 +78,6 @@ export default function App() {
           currentRole={currentRole}
           setCurrentRole={setCurrentRole}
           openGrievanceModal={() => setIsGrievanceModalOpen(true)}
-          openShareModal={() => setIsShareModalOpen(true)}
         />
 
         {/* Main Content Area */}
@@ -86,7 +88,6 @@ export default function App() {
               openVisionModal={() => setIsVisionModalOpen(true)}
               openLogisticsModal={() => setIsLogisticsModalOpen(true)}
               openGeminiModal={handleOpenGeminiModal}
-              openShareModal={() => setIsShareModalOpen(true)}
             />
           )}
 
@@ -94,9 +95,9 @@ export default function App() {
             <FarmerDashboard
               lots={farmerLots}
               openVisionModal={() => setIsVisionModalOpen(true)}
+              openPestModal={() => setIsPestModalOpen(true)}
               openLogisticsModal={() => setIsLogisticsModalOpen(true)}
               openGeminiModal={handleOpenGeminiModal}
-              openShareModal={() => setIsShareModalOpen(true)}
               onBackToHome={() => setCurrentRole('landing')}
             />
           )}
@@ -129,7 +130,6 @@ export default function App() {
           openGrievanceModal={() => setIsGrievanceModalOpen(true)}
           openLogisticsModal={() => setIsLogisticsModalOpen(true)}
           openVisionModal={() => setIsVisionModalOpen(true)}
-          openShareModal={() => setIsShareModalOpen(true)}
         />
 
         {/* Interactive Feature Modals */}
@@ -137,6 +137,11 @@ export default function App() {
           isOpen={isVisionModalOpen}
           onClose={() => setIsVisionModalOpen(false)}
           onLotCreated={handleLotCreated}
+        />
+
+        <PestDetectorModal
+          isOpen={isPestModalOpen}
+          onClose={() => setIsPestModalOpen(false)}
         />
 
         <LogisticsTrackerModal
@@ -150,11 +155,6 @@ export default function App() {
         />
 
         <FloatingChatbot />
-
-        <ShareModal
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
-        />
       </div>
     </LanguageProvider>
   );

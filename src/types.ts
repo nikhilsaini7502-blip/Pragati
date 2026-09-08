@@ -32,8 +32,9 @@ export interface FarmerLot {
   quantityQuintals: number;
   expectedPricePerQuintal: number;
   harvestDate: string;
-  aiQualityGrade: 'A+' | 'A' | 'B' | 'Pending';
+  aiQualityGrade: 'A+' | 'A' | 'B' | 'Pending' | string;
   aiQualityScore?: number; // e.g. 94%
+  imageGallery?: string[]; // Optional array of base64 image strings
   aiQualityMetrics?: {
     sizeUniformity: number; // percentage
     moistureContent: number; // percentage
@@ -60,6 +61,7 @@ export interface BuyerMatch {
   verified: boolean;
   avatar: string;
   fpoAffiliated?: string;
+  imageGallery?: string[];
 }
 
 export interface LogisticsStep {

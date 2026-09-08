@@ -7,18 +7,18 @@ import { WeatherWidget } from './WeatherWidget';
 interface FarmerDashboardProps {
   lots: FarmerLot[];
   openVisionModal: () => void;
+  openPestModal: () => void;
   openLogisticsModal: () => void;
   openGeminiModal: (query?: string) => void;
-  openShareModal?: () => void;
   onBackToHome: () => void;
 }
 
 export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
   lots,
   openVisionModal,
+  openPestModal,
   openLogisticsModal,
   openGeminiModal,
-  openShareModal,
   onBackToHome,
 }) => {
   const { t, language } = useLanguage();
@@ -50,19 +50,10 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
             </p>
           </div>
         </div>
-        {openShareModal && (
-          <button
-            onClick={openShareModal}
-            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          >
-            <Share2 className="w-4 h-4" />
-            <span>{language === 'mr' ? 'मित्रांना सांगा' : language === 'hi' ? 'मित्रों को बताएं' : 'Share App'}</span>
-          </button>
-        )}
       </div>
 
       {/* 2. Main Actions (Big, Clear Buttons) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Sell Crop Button */}
         <button
           onClick={openVisionModal}
@@ -79,6 +70,25 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
           </div>
           <p className="relative z-10 text-green-50 text-sm opacity-90">
             {language === 'mr' ? 'फोटो काढा आणि थेट खरेदीदारांना विका' : language === 'hi' ? 'फोटो खींचें और सीधे खरीदारों को बेचें' : 'Take a photo and sell directly to buyers'}
+          </p>
+        </button>
+
+        {/* Pest & Disease Detector Button */}
+        <button
+          onClick={openPestModal}
+          className="relative overflow-hidden group bg-red-600 hover:bg-red-700 text-white p-6 rounded-2xl shadow-md transition-all text-left flex flex-col justify-between min-h-[140px] cursor-pointer"
+        >
+          <div className="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-xl group-hover:bg-white/20 transition-all" />
+          <div className="relative z-10 flex items-center gap-3 mb-2">
+            <div className="p-3 bg-white/20 rounded-xl">
+              <Bot className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="font-bold text-xl">
+              {language === 'mr' ? 'रोग आणि कीड ओळख' : language === 'hi' ? 'रोग और कीट पहचान' : 'Disease Detector'}
+            </h3>
+          </div>
+          <p className="relative z-10 text-red-50 text-sm opacity-90">
+            {language === 'mr' ? 'फोटोवरून रोग ओळखा आणि उपाय मिळवा' : language === 'hi' ? 'फोटो से बीमारी पहचानें और उपाय पाएं' : 'Scan for pests and get instant remedies'}
           </p>
         </button>
 
@@ -137,18 +147,34 @@ export const FarmerDashboard: React.FC<FarmerDashboardProps> = ({
                     <p className="text-xs sm:text-sm text-slate-500 mb-2">
                       {lot.quantityQuintals} {language === 'mr' ? 'क्विंटल' : language === 'hi' ? 'क्विंटल' : 'Quintals'} • <span className="font-bold text-green-700">₹{lot.expectedPricePerQuintal} / Qtl</span>
                     </p>
-                    {/* Status Pill */}
-                    {lot.status === 'Escrow Locked' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200">
-                        <ShieldCheck className="w-3.5 h-3.5" />
-                        {language === 'mr' ? 'एस्क्रो लॉक (खरेदीदार मिळाला)' : language === 'hi' ? 'एस्क्रो लॉक (खरीदार मिल गया)' : 'Escrow Locked (Buyer)'}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200">
-                        <TrendingUp className="w-3.5 h-3.5" />
-                        {language === 'mr' ? 'खरेदीदाराच्या शोधात...' : language === 'hi' ? 'खरीदार की तलाश...' : 'Matching Buyers...'}
-                      </span>
-                    )}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      {/* Status Pill */}
+                      {lot.status === 'Escrow Locked' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-200 w-fit">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          {language === 'mr' ? 'एस्क्रो लॉक (खरेदीदार मिळाला)' : language === 'hi' ? 'एस्क्रो लॉक (खरीदार मिल गया)' : 'Escrow Locked (Buyer)'}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-bold border border-amber-200 w-fit">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          {language === 'mr' ? 'खरेदीदाराच्या शोधात...' : language === 'hi' ? 'खरीदार की तलाश...' : 'Matching Buyers...'}
+                        </span>
+                      )}
+                      
+                      {/* Crop Images Gallery (Optional) */}
+                      {lot.imageGallery && lot.imageGallery.length > 0 && (
+                        <div className="flex -space-x-2 overflow-hidden sm:ml-2">
+                          {lot.imageGallery.map((img, idx) => (
+                            <img 
+                              key={idx}
+                              src={img} 
+                              alt="Crop sample" 
+                              className="inline-block h-6 w-6 rounded-md ring-1 ring-white object-cover shadow-xs border border-slate-200"
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
