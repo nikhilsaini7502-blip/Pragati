@@ -32,6 +32,28 @@ function getGenAiClient(): GoogleGenAI | null {
   return genAiClient;
 }
 
+
+// Model generation with multi-tier fallback (gemini-3.8-flash -> gemini-3.1-flash-lite)
+async function generateWithModelFallback(
+  ai: GoogleGenAI,
+  options: { contents: any; config?: any }
+) {
+  try {
+    return await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: options.contents,
+      config: options.config,
+    });
+  } catch (err: any) {
+    console.warn("[GenAI] Primary model gemini-3.8-flash unavailable, attempting gemini-3.1-flash-lite:", err?.message || err);
+    return await ai.models.generateContent({
+      model: "gemini-3.1-flash-lite",
+      contents: options.contents,
+      config: options.config,
+    });
+  }
+}
+
 // Health check endpoint
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -72,6 +94,15 @@ app.post("/api/analyze-crop", async (req, res) => {
 Perform a rigorous, honest, and scientifically accurate inspection of this agricultural produce photograph.
 
 CRITICAL INSTRUCTIONS FOR ACCURACY:
+0. DOMAIN VALIDATION (OUT-OF-DOMAIN REJECTION):
+   Check if the photo actually depicts real agricultural farm harvest / produce.
+   If it is a human hand, fingers, skin, mobile phone, pen, laptop, face, vehicle, room, or screenshot:
+   - "isCropDetected" MUST be false.
+   - "cropName" MUST be "Unrecognized Non-Crop Object".
+   - "grade" MUST be "Rejected (Non-Crop)".
+   - "score" MUST be 0.
+   - "findings" MUST be "Non-agricultural object photographed."
+   - "recommendation" MUST be "Please re-upload a clear photograph of agricultural produce."
 1. Carefully inspect for SPOILAGE, ROTTING, DECAY, BLACK MOLD (Aspergillus niger), SOFT NECK ROT, SPROUTING, WATER SOAKING, BRUISING, CUTS, OR DISCOLORATION.
 2. If the produce in the image is ROTTEN, SPOILED, MOLDY, DAMAGED, SPROUTED, OR DISCOLORED:
    - Grade MUST be "Grade C (Sub-standard)" or "Rejected (Fungal Rot / Spoiled)" or "Grade C (Defective)".
@@ -104,8 +135,7 @@ Return ONLY a JSON object matching this schema:
   "recommendation": "Advice to farmer: Cull immediately, dry in shade, or separate before storage."
 }`;
 
-        const response = await ai.models.generateContent({
-          model: "gemini-3.6-flash",
+        const response = await generateWithModelFallback(ai, {
           contents: [
             {
               role: "user",
@@ -167,13 +197,44 @@ Return ONLY a JSON object matching this schema:
             result,
           });
         }
-      } catch (geminiError) {
-        console.error("Gemini Vision API error:", geminiError);
-        // Fall back to computer vision heuristics below
+      } catch (geminiError: any) {
+        console.warn("[Crop Vision] Gemini API unavailable or high demand (503), switching to resilient offline heuristics:", geminiError?.message || geminiError);
       }
     }
 
     // Heuristic Fallback Computer Vision (if API key missing or network failure)
+    const lowerHint = (cropHint || "").toLowerCase();
+    const isNonCropHint =
+      lowerHint.includes("hand") ||
+      lowerHint.includes("finger") ||
+      lowerHint.includes("pen") ||
+      lowerHint.includes("phone") ||
+      lowerHint.includes("screen") ||
+      lowerHint.includes("face") ||
+      lowerHint.includes("room") ||
+      lowerHint.includes("car");
+
+    if (isNonCropHint) {
+      return res.json({
+        success: true,
+        source: "computer-vision-heuristics",
+        result: {
+          isCropDetected: false,
+          cropName: "Unrecognized Non-Crop Object",
+          grade: "Rejected (Non-Crop)",
+          score: 0,
+          isSpoiledOrRotten: false,
+          moisture: "N/A",
+          uniformity: "0%",
+          defects: "100%",
+          shelfLife: "N/A",
+          mspBonus: "₹0",
+          findings: "The uploaded image does not appear to contain an agricultural crop. A hand, phone, pen, or foreign object was detected.",
+          recommendation: "Please photograph real agricultural farm produce.",
+        },
+      });
+    }
+
     const isRottenHint =
       cropHint.toLowerCase().includes("rot") ||
       cropHint.toLowerCase().includes("decay") ||
@@ -265,8 +326,7 @@ Return ONLY a JSON object matching this exact schema:
 }
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.6-flash",
+    const response = await generateWithModelFallback(ai, {
       contents: [
         {
           role: "user",
@@ -320,10 +380,36 @@ Return ONLY a JSON object matching this exact schema:
       throw new Error("Empty response from AI");
     }
   } catch (error: any) {
-    console.error("Pest analysis error:", error);
+    console.warn("[Pest AI] Gemini Pest API unavailable or high demand (503), switching to resilient offline heuristics:", error?.message || error);
     
     // Heuristic Fallback
     const summaryLower = (req.body?.summary || "").toLowerCase();
+    const isNonPlant =
+      summaryLower.includes("hand") ||
+      summaryLower.includes("finger") ||
+      summaryLower.includes("pen") ||
+      summaryLower.includes("phone") ||
+      summaryLower.includes("screen") ||
+      summaryLower.includes("face") ||
+      summaryLower.includes("room") ||
+      summaryLower.includes("car");
+
+    if (isNonPlant) {
+      return res.json({
+        success: true,
+        source: "heuristic-fallback",
+        result: {
+          isCropDetected: false,
+          diseaseName: "Invalid Image (Non-Crop)",
+          confidence: "Low",
+          severity: "None",
+          identificationDetails: "The uploaded image does not contain agricultural plant foliage or crop leaves.",
+          homeRemedy: "Please photograph an infected agricultural leaf or crop stem.",
+          chemicalCure: "None applicable."
+        }
+      });
+    }
+
     const isWilt = summaryLower.includes("wilt") || summaryLower.includes("dry") || summaryLower.includes("yellow");
     
     const fallbackResult = isWilt ? {
@@ -364,8 +450,7 @@ app.post("/api/gemini/advisor", async (req, res) => {
         req.body?.language === 'hi' ? 'Respond ENTIRELY in Hindi (हिंदी). Use simple, clear Hindi terminology for farmers.' :
         'Respond in English.';
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+      const response = await generateWithModelFallback(ai, {
         contents: `You are Pragati's Official AI Assistant (by Government of Maharashtra).
 Your role is to help users navigate the website, resolve queries for Farmers, Buyers, and FPOs, and provide APMC market advisory.
 
@@ -393,7 +478,7 @@ Keep the tone encouraging, professional, and practical. NEVER write long paragra
       message: "Gemini API client not configured",
     });
   } catch (error: any) {
-    console.error("Advisor API error:", error);
+    console.warn("[Advisor AI] Gemini Advisor API unavailable or high demand (503), switching to resilient offline response:", error?.message || error);
     // Heuristic Fallback
     const q = (req.body?.query || "").toLowerCase();
     let fallbackText = req.body?.language === 'mr' ? 'माफ करा, सध्या सर्व्हरवर जास्त लोड आहे. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.' : req.body?.language === 'hi' ? 'क्षमा करें, सर्वर पर वर्तमान में बहुत अधिक लोड है। कृपया कुछ समय बाद पुनः प्रयास करें।' : 'Sorry, the server is currently experiencing high demand. Please try again in a few moments.';
