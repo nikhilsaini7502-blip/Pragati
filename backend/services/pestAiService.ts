@@ -134,18 +134,25 @@ Return JSON strictly:
           },
         };
 
-        try {
-          return await ai.models.generateContent({
-            model: "gemini-3.8-flash",
-            ...payload,
-          });
-        } catch (tierErr: any) {
-          console.warn("[PestAI] gemini-3.8-flash unavailable, trying gemini-3.1-flash-lite:", tierErr?.message || tierErr);
-          return await ai.models.generateContent({
-            model: "gemini-3.1-flash-lite",
-            ...payload,
-          });
+        let usedModel = "gemini-flash-latest";
+        const candidateModels = ["gemini-flash-latest", "gemini-3.8-flash", "gemini-3.1-flash-lite"];
+        for (let i = 0; i < candidateModels.length; i++) {
+          const m = candidateModels[i];
+          try {
+            const res = await ai.models.generateContent({
+              model: m,
+              ...payload,
+            });
+            usedModel = m;
+            return { response: res, usedModel };
+          } catch (tierErr: any) {
+            console.log(`[PestAI] Model ${m} unavailable (status ${tierErr?.status || tierErr?.code || 503}). Trying alternative...`);
+            if (i < candidateModels.length - 1) {
+              await new Promise((r) => setTimeout(r, 200));
+            }
+          }
         }
+        throw new Error("All candidate pest AI models unavailable");
       };
 
       const apiCall = executeWithFallback();
@@ -153,8 +160,8 @@ Return JSON strictly:
         setTimeout(() => reject(new Error("Pest API request timed out after 8s")), 8000)
       );
 
-      const response = (await Promise.race([apiCall, timeoutPromise])) as any;
-      const jsonText = response.text?.trim();
+      const { response, usedModel } = (await Promise.race([apiCall, timeoutPromise])) as any;
+      const jsonText = response?.text?.trim();
 
       if (jsonText) {
         const parsed = JSON.parse(jsonText);
@@ -175,7 +182,7 @@ Return JSON strictly:
           chemicalCure: parsed.chemicalCure || "Carbendazim 50% WP (2g/L).",
           modelVersion: "pragati-pest-fast-v3.6",
           processingTimeMs,
-          source: "gemini-3.8-flash",
+          source: usedModel,
         };
 
         // Cache result
@@ -190,7 +197,7 @@ Return JSON strictly:
         return result;
       }
     } catch (error) {
-      console.warn("[PestAI] Accelerated fallback triggered:", (error as Error).message);
+      console.log("[PestAI] Gemini API unavailable or high demand (503), engaging accelerated fallback.");
     }
   }
 

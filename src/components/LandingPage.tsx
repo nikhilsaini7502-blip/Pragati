@@ -90,9 +90,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
         <div className="relative max-w-3xl mx-auto text-center space-y-6">
           {/* Official badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-green-50 text-xs font-semibold shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse"></span>
-            <span>{t('deptName')}</span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-green-50 text-xs font-semibold shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-green-300 animate-pulse"></span>
+              <span>{t('deptName')}</span>
+            </div>
           </div>
 
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">

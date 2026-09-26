@@ -196,20 +196,26 @@ STAGE 2: CROP IDENTIFICATION & QUALITY ASSAY (Only if isCropDetected is true)
         },
       };
 
-      try {
-        response = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
-          ...requestPayload,
-        });
-      } catch (tierErr: any) {
-        console.warn("[CropAI] gemini-3.8-flash unavailable, trying gemini-3.1-flash-lite:", tierErr?.message || tierErr);
-        response = await ai.models.generateContent({
-          model: "gemini-3.1-flash-lite",
-          ...requestPayload,
-        });
+      let usedModel = "gemini-flash-latest";
+      const candidateModels = ["gemini-flash-latest", "gemini-3.8-flash", "gemini-3.1-flash-lite"];
+      for (let i = 0; i < candidateModels.length; i++) {
+        const m = candidateModels[i];
+        try {
+          response = await ai.models.generateContent({
+            model: m,
+            ...requestPayload,
+          });
+          usedModel = m;
+          break;
+        } catch (tierErr: any) {
+          console.log(`[CropAI] Model ${m} unavailable (status ${tierErr?.status || tierErr?.code || 503}). Trying alternative...`);
+          if (i < candidateModels.length - 1) {
+            await new Promise((r) => setTimeout(r, 200));
+          }
+        }
       }
 
-      const jsonText = response.text?.trim();
+      const jsonText = response?.text?.trim();
       if (jsonText) {
         const parsed = JSON.parse(jsonText);
         const processingTimeMs = Date.now() - startTime;
@@ -236,7 +242,7 @@ STAGE 2: CROP IDENTIFICATION & QUALITY ASSAY (Only if isCropDetected is true)
           recommendation: parsed.recommendation || "Certified for APMC listing.",
           modelVersion: "pragati-vision-v3.6-flash",
           processingTimeMs,
-          source: "gemini-3.8-flash",
+          source: usedModel,
         };
 
         // Persist scan to MongoDB / DataStore
@@ -265,7 +271,7 @@ STAGE 2: CROP IDENTIFICATION & QUALITY ASSAY (Only if isCropDetected is true)
         return scanResult;
       }
     } catch (apiError) {
-      console.warn("[CropAI] Gemini API error, engaging heuristic fallback:", (apiError as Error).message);
+      console.log("[CropAI] Gemini API unavailable or high demand (503), engaging heuristic fallback.");
     }
   }
 

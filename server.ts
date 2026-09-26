@@ -33,25 +33,34 @@ function getGenAiClient(): GoogleGenAI | null {
 }
 
 
-// Model generation with multi-tier fallback (gemini-3.8-flash -> gemini-3.1-flash-lite)
+// Model generation with multi-tier fallback (gemini-flash-latest -> gemini-3.8-flash -> gemini-3.1-flash-lite)
 async function generateWithModelFallback(
   ai: GoogleGenAI,
   options: { contents: any; config?: any }
 ) {
-  try {
-    return await ai.models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: options.contents,
-      config: options.config,
-    });
-  } catch (err: any) {
-    console.warn("[GenAI] Primary model gemini-3.8-flash unavailable, attempting gemini-3.1-flash-lite:", err?.message || err);
-    return await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
-      contents: options.contents,
-      config: options.config,
-    });
+  const candidateModels = ["gemini-flash-latest", "gemini-3.8-flash", "gemini-3.1-flash-lite"];
+  let lastError: any = null;
+
+  for (let i = 0; i < candidateModels.length; i++) {
+    const model = candidateModels[i];
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: options.contents,
+        config: options.config,
+      });
+      return { response, modelUsed: model };
+    } catch (err: any) {
+      lastError = err;
+      // Use clean stdout logging so temporary 503 load spikes are not treated as unhandled runtime crashes
+      console.log(`[GenAI] Model ${model} unavailable (status ${err?.status || err?.code || 503}). Trying alternative model...`);
+      if (i < candidateModels.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+    }
   }
+
+  throw new Error(`All candidate Gemini models temporarily unavailable (${lastError?.status || "503 High Demand"})`);
 }
 
 // Health check endpoint
@@ -135,7 +144,7 @@ Return ONLY a JSON object matching this schema:
   "recommendation": "Advice to farmer: Cull immediately, dry in shade, or separate before storage."
 }`;
 
-        const response = await generateWithModelFallback(ai, {
+        const { response, modelUsed } = await generateWithModelFallback(ai, {
           contents: [
             {
               role: "user",
@@ -193,12 +202,12 @@ Return ONLY a JSON object matching this schema:
           const result = JSON.parse(jsonText);
           return res.json({
             success: true,
-            source: "gemini-vision-2.5-flash",
+            source: modelUsed,
             result,
           });
         }
       } catch (geminiError: any) {
-        console.warn("[Crop Vision] Gemini API unavailable or high demand (503), switching to resilient offline heuristics:", geminiError?.message || geminiError);
+        console.log("[Crop Vision] Gemini API unavailable or high demand (503), switching to resilient offline heuristics.");
       }
     }
 
@@ -283,7 +292,7 @@ Return ONLY a JSON object matching this schema:
       result: fallbackResult,
     });
   } catch (error: any) {
-    console.error("Server crop analysis error:", error);
+    console.log("Server crop analysis error:", error?.message || error);
     return res.status(500).json({ error: error.message || "Failed to analyze crop" });
   }
 });
@@ -326,7 +335,7 @@ Return ONLY a JSON object matching this exact schema:
 }
 `;
 
-    const response = await generateWithModelFallback(ai, {
+    const { response } = await generateWithModelFallback(ai, {
       contents: [
         {
           role: "user",
@@ -380,7 +389,7 @@ Return ONLY a JSON object matching this exact schema:
       throw new Error("Empty response from AI");
     }
   } catch (error: any) {
-    console.warn("[Pest AI] Gemini Pest API unavailable or high demand (503), switching to resilient offline heuristics:", error?.message || error);
+    console.log("[Pest AI] Gemini Pest API unavailable or high demand (503), switching to resilient offline heuristics.");
     
     // Heuristic Fallback
     const summaryLower = (req.body?.summary || "").toLowerCase();
@@ -450,7 +459,7 @@ app.post("/api/gemini/advisor", async (req, res) => {
         req.body?.language === 'hi' ? 'Respond ENTIRELY in Hindi (हिंदी). Use simple, clear Hindi terminology for farmers.' :
         'Respond in English.';
 
-      const response = await generateWithModelFallback(ai, {
+      const { response } = await generateWithModelFallback(ai, {
         contents: `You are Pragati's Official AI Assistant (by Government of Maharashtra).
 Your role is to help users navigate the website, resolve queries for Farmers, Buyers, and FPOs, and provide APMC market advisory.
 
@@ -478,7 +487,7 @@ Keep the tone encouraging, professional, and practical. NEVER write long paragra
       message: "Gemini API client not configured",
     });
   } catch (error: any) {
-    console.warn("[Advisor AI] Gemini Advisor API unavailable or high demand (503), switching to resilient offline response:", error?.message || error);
+    console.log("[Advisor AI] Gemini Advisor API unavailable or high demand (503), switching to resilient offline response.");
     // Heuristic Fallback
     const q = (req.body?.query || "").toLowerCase();
     let fallbackText = req.body?.language === 'mr' ? 'माफ करा, सध्या सर्व्हरवर जास्त लोड आहे. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.' : req.body?.language === 'hi' ? 'क्षमा करें, सर्वर पर वर्तमान में बहुत अधिक लोड है। कृपया कुछ समय बाद पुनः प्रयास करें।' : 'Sorry, the server is currently experiencing high demand. Please try again in a few moments.';

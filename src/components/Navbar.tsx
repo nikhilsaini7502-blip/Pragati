@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sprout, Globe, PhoneCall, ShieldCheck, Menu, X, ArrowLeft, Building2, Share2 } from 'lucide-react';
+import { Sprout, Globe, PhoneCall, ShieldCheck, Menu, X, ArrowLeft, Building2, Share2, Award, Presentation } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { UserRole, Language } from '../types';
 
@@ -24,6 +24,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentRole, setCurrentRole, ope
       {/* Official Government Top Bar with Natural Tones */}
       <div className="bg-slate-900 text-slate-300 text-xs px-3 sm:px-6 py-1.5 flex justify-between items-center tracking-wide border-b border-slate-800">
         <div className="flex items-center gap-2">
+          {/* Prominent Team Name PRAGATI_SIH26 at Top Left */}
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-600/30 text-emerald-300 font-mono font-bold text-[11px] sm:text-xs border border-emerald-500/50 shadow-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>TEAM: PRAGATI_SIH26</span>
+          </div>
+
+          <span className="hidden sm:inline-block text-slate-600">•</span>
+
           {/* Government of Maharashtra Seal Representation */}
           <div className="flex items-center gap-1.5">
             <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-green-600/30 text-green-400 font-bold text-[10px] border border-green-500/40">
